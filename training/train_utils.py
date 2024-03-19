@@ -9,7 +9,7 @@ from d3rlpy.dataset import MDPDataset
 from d3rlpy.algos import DiscreteCQL, CQL, DiscreteBC, BC, RandomPolicy, DiscreteRandomPolicy, DoubleDQN, SAC
 from d3rlpy.metrics.scorer import continuous_action_diff_scorer, soft_opc_scorer, initial_state_value_estimation_scorer, average_value_estimation_scorer, discrete_action_match_scorer, td_error_scorer
 
-from utils.load_utils import load_data
+from utils.load_utils import load_data, load_mimic
 def train(
     model_class, 
     learning_rate, 
@@ -37,7 +37,16 @@ def train(
         n_steps_per_epoch: Number of steps to train for each epoch
     '''
     print(f"Training params -------\nLearning Rate: {learning_rate}\n Gamma: {gamma}")
-    train_data, test_data = load_data(states, rewards, index_of_split)
+    
+    data_path = os.path.join('/home/as26840@ens.ad.etsmtl.ca/data/mimic_sepsis', 'mimic45d.pkl')
+    with open(data_path, "rb") as fp:
+        data = pickle.load(fp)
+    
+    train_data = data['train']
+    test_data  = data['val']
+    
+    train_data = load_mimic(train_data)
+    test_data = load_mimic(test_data)
     assert(len(train_data.episodes) > len(test_data.episodes))
 
     # Instantiate model class
