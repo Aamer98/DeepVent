@@ -29,6 +29,46 @@ def episode_list_to_mdp_dataset(episode_list):
         np.array(terminals)
     )
 
+
+def load_mimic(dataset):
+
+    states    = np.array([])
+    actions   = np.array([])
+    rewards   = np.array([])
+    terminals = np.array([])
+
+    for i in range(len(dataset)):
+
+        state_i    = dataset[i]['dem_observations']
+        action_i   = dataset[i]['actions']
+        reward_i   = dataset[i]['rewards']
+        terminal_i = np.zeros_like(dataset[i]['rewards'])
+
+        reward     = set(dataset[i]['rewards'].tolist())
+        reward.remove(0)
+        reward     = int(reward.pop())
+        traj_idx   = dataset[i]['rewards'].tolist().index(reward)
+
+        state_i    = dataset[i]['dem_observations'][:traj_idx+1]
+        action_i   = dataset[i]['actions'][:traj_idx+1]
+        reward_i   = dataset[i]['rewards'][:traj_idx+1]
+        terminal_i = np.zeros_like(dataset[i]['rewards'])
+        terminal_i[-1] = 1
+        
+        if i == 0:
+            states = state_i
+            actions = action_i
+            rewards = reward_i
+            terminals = terminal_i
+        else:
+            states = np.concatenate((states, state_i))
+            actions = np.concatenate((actions, action_i))
+            rewards = np.concatenate((rewards, reward_i))
+            terminals = np.concatenate((terminals, terminal_i))
+    
+    return MDPDataset(states, actions, rewards, terminals)
+    
+
 def load_data(states, rewards, index_of_split=None, no_split=False):
     ''' Load data based on states option and rewards option.
 
